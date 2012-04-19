@@ -22,6 +22,7 @@
                 $description = $renderer->getControlDescription($control),
                 $error = $renderer->getControlError($control)
             }
+
             {if $controlTemplate = $renderer->getControlTemplate($control)}
                 <div class="controls">
                     {include "$controlTemplate", name => $name,
