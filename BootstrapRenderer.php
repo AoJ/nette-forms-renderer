@@ -96,37 +96,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 
 			// controls placeholders & classes
 			foreach ($this->form->getControls() as $control) {
-				/** @var \Nette\Forms\Controls\BaseControl $control */
-				$control->setOption('rendered', FALSE);
-
-				if ($control->isRequired()) {
-					$control->getLabelPrototype()
-						->addClass('required');
-				}
-
-				$el = $control->getControlPrototype();
-				if ($el->getName() === 'input') {
-					$el->class(strtr($el->type, array(
-						'password' => 'text',
-						'file' => 'text',
-						'submit' => 'button',
-						'image' => 'imagebutton',
-					)), TRUE);
-				}
-
-				if ($placeholder = $control->getOption('placeholder')) {
-					if (!$placeholder instanceof Html && $translator) {
-						$placeholder = $translator->translate($placeholder);
-					}
-					$el->placeholder($placeholder);
-				}
-
-				if ($control->controlPrototype->type === 'email') {
-					$email = Html::el('span', array('class' => 'add-on'))
-						->setText('@');
-
-					$control->setOption('input-prepend', $email);
-				}
+				$this->prepareControl($control);
 			}
 
 			$formEl = $form->getElementPrototype();
@@ -138,6 +108,50 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		$this->template->form = $this->form;
 		$this->template->renderer = $this;
 		$this->template->render();
+	}
+
+
+
+	/**
+	 * @param \Nette\Forms\Controls\BaseControl $control
+	 */
+	private function prepareControl(Controls\BaseControl $control)
+	{
+		$translator = $this->form->getTranslator();
+		$control->setOption('rendered', FALSE);
+
+		if ($control->isRequired()) {
+			$control->getLabelPrototype()
+				->addClass('required');
+		}
+
+		$el = $control->getControlPrototype();
+		if ($el->getName() === 'input') {
+			$el->class(strtr($el->type, array(
+				'password' => 'text',
+				'file' => 'text',
+				'submit' => 'button',
+				'image' => 'imagebutton',
+			)), TRUE);
+		}
+
+		if ($placeholder = $control->getOption('placeholder')) {
+			if (!$placeholder instanceof Html && $translator) {
+				$placeholder = $translator->translate($placeholder);
+			}
+			$el->placeholder($placeholder);
+		}
+
+		if ($control->controlPrototype->type === 'email') {
+			$email = Html::el('span', array('class' => 'add-on'))
+				->setText('@');
+
+			$control->setOption('input-prepend', $email);
+		}
+
+		if ($control instanceof Nette\Forms\ISubmitterControl) {
+			$el->addClass('btn');
+		}
 	}
 
 
@@ -213,7 +227,11 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 */
 	public function findFormControls()
 	{
-		return $this->filterGroupControls($this->form->getControls());
+		$controls = iterator_to_array($this->form->getControls());
+		return array_filter($controls, function (Controls\BaseControl $control) {
+			return !$control->getOption('rendered')
+				&& !$control instanceof Nette\Forms\ISubmitterControl;
+		});
 	}
 
 
@@ -221,20 +239,12 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	/**
 	 * @return Nette\Forms\ISubmitterControl[]
 	 */
-	public function findSubmitters()
+	public function findFormSubmitters()
 	{
-		$formSubmitters = array();
-		foreach ($this->form->getComponents(TRUE, 'Nette\Forms\ISubmitterControl') as $control) {
-			/** @var \Nette\Forms\Controls\BaseControl $control */
-			if ($control->getOption('rendered') || $control->getOption('inline')) {
-				continue;
-			}
-
-			$control->getControlPrototype()->addClass('btn');
-			$formSubmitters[] = $control;
-		}
-
-		return $formSubmitters;
+		$submitters = iterator_to_array($this->form->getComponents(TRUE, 'Nette\Forms\ISubmitterControl'));
+		return array_filter($submitters, function (Controls\BaseControl $control) {
+			return !$control->getOption('rendered');
+		});
 	}
 
 
@@ -263,38 +273,25 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 			}
 		}
 
+		$controls = $group->getControls();
+
 		// fake group
 		return (object)array(
 			'template' => $group->getOption('template'),
-			'controls' => $this->filterGroupControls($group->getControls()),
+			'controls' => array_filter($controls, function (Controls\BaseControl $control) {
+					return !$control->getOption('rendered')
+						&& !$control instanceof Controls\HiddenField
+						&& (!$control instanceof Nette\Forms\ISubmitterControl
+							|| $control->getOption('inline') === TRUE);
+				}),
+			'submitters' => array_filter($controls, function (Controls\BaseControl $control) {
+					return !$control->getOption('rendered')
+						&& $control instanceof Nette\Forms\ISubmitterControl
+						&& $control->getOption('inline') !== TRUE;
+				}),
 			'label' => $groupLabel,
 			'description' => $groupDescription,
 		);
-	}
-
-
-
-	/**
-	 * @param array|\Traversable $groupControls
-	 * @return array
-	 */
-	private function filterGroupControls($groupControls)
-	{
-		$controls = array();
-		foreach ($groupControls as $control) {
-			/** @var \Nette\Forms\Controls\BaseControl $control */
-			if ($control->getOption('rendered') || $control instanceof Controls\HiddenField) {
-				continue;
-			}
-
-			if ($control instanceof Nette\Forms\ISubmitterControl && !$control->getOption('inline')) {
-				continue;
-			}
-
-			$controls[] = $control;
-		}
-
-		return $controls;
 	}
 
 
@@ -306,7 +303,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return string
 	 */
-	public function getControlName(Controls\BaseControl $control)
+	public static function getControlName(Controls\BaseControl $control)
 	{
 		return $control->lookupPath('Nette\Forms\Form');
 	}
@@ -320,14 +317,14 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return \Nette\Utils\Html
 	 */
-	public function getControlDescription(Controls\BaseControl $control)
+	public static function getControlDescription(Controls\BaseControl $control)
 	{
 		if (!$desc = $control->getOption('description')) {
 			return Html::el();
 		}
 
 		// If we have translator, translate!
-		if (!$desc instanceof Html && ($translator = $this->form->getTranslator())) {
+		if (!$desc instanceof Html && ($translator = $control->form->getTranslator())) {
 			$desc = $translator->translate($desc); // wtf?
 		}
 
@@ -353,7 +350,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		$error = reset($errors);
 
 		// If we have translator, translate!
-		if (!$error instanceof Html && ($translator = $this->form->getTranslator())) {
+		if (!$error instanceof Html && ($translator = $control->form->getTranslator())) {
 			$error = $translator->translate($error); // wtf?
 		}
 
@@ -371,7 +368,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return string
 	 */
-	public function getControlTemplate(Controls\BaseControl $control)
+	public static function getControlTemplate(Controls\BaseControl $control)
 	{
 		return $control->getOption('template');
 	}
@@ -385,7 +382,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return bool
 	 */
-	public function isButton(Nette\Forms\IControl $control)
+	public static function isButton(Nette\Forms\IControl $control)
 	{
 		return $control instanceof Controls\Button;
 	}
@@ -399,7 +396,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return bool
 	 */
-	public function isCheckbox(Nette\Forms\IControl $control)
+	public static function isCheckbox(Nette\Forms\IControl $control)
 	{
 		return $control instanceof Controls\Checkbox;
 	}
@@ -413,7 +410,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return bool
 	 */
-	public function isRadioList(Nette\Forms\IControl $control)
+	public static function isRadioList(Nette\Forms\IControl $control)
 	{
 		return $control instanceof Controls\RadioList;
 	}
@@ -427,7 +424,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return bool
 	 */
-	public function getRadioListItems(Controls\RadioList $control)
+	public static function getRadioListItems(Controls\RadioList $control)
 	{
 		$items = array();
 		foreach ($control->items as $key => $value) {
