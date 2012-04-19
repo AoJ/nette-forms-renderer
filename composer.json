@@ -1,0 +1,8 @@
+{
+	"name": "nette/bootstrap-form-renderer",
+	"description": "Extensible form renderer with bootstrap",
+	"require": {
+		"php" : ">=5.3.2",
+		"nette/nette" : "2.0.3"
+	}
+}
