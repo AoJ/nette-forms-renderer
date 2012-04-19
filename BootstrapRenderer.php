@@ -20,7 +20,6 @@ use Nette\Utils\Html;
  * Usage:
  * $form->addRenderer(new TemplateFormsRenderer);
  *
- * You can customize the directory, where all the templates resides.
  * Created with twitter bootstrap in mind. If you want to append options, use:
  *
  * ok $field->setOption('help', 'help text');
@@ -401,7 +400,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
      * @internal
      * @return bool
      */
-    public function isEmail(Nette\Forms\IControl $control)
+    public function isEmail(Controls\BaseControl $control)
     {
         return $control->controlPrototype->type === 'email';
     }

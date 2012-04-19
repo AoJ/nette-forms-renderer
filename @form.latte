@@ -11,7 +11,7 @@
     <p n:if="$group->description">{$group->description}</p>
 
     {block #controls}
-    {if $group->template}
+    {if isset($group->template) && $group->template}
         {include "$group->template", group => $group, 
             form => $form, _form => $form}
 
