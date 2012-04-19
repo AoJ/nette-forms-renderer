@@ -375,7 +375,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 *
 	 * @return bool
 	 */
-	public static function isSubmitButton(Nette\Forms\IControl $control)
+	public static function isSubmitButton(Nette\Forms\IControl $control = NULL)
 	{
 		return $control instanceof Nette\Forms\ISubmitterControl;
 	}
