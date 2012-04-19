@@ -22,6 +22,7 @@
         {if $renderer->isSubmitButton($control)}
             {input $renderer->getControlName($control)}
             {if !$renderer->isSubmitButton($iterator->nextValue)}{!="</div>"}{/if}
+            {?continue}
         {/if}
 
         <div id="{$control->htmlId}-pair" n:class="$control->getOption('required')? required, control-group, $control->errors? error">
