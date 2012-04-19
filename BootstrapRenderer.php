@@ -120,6 +120,13 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 					}
 					$el->placeholder($placeholder);
 				}
+
+				if ($control->controlPrototype->type === 'email') {
+					$email = Html::el('span', array('class' => 'add-on'))
+						->setText('@');
+
+					$control->setOption('input-prepend', $email);
+				}
 			}
 
 			$formEl = $form->getElementPrototype();
@@ -431,20 +438,6 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		}
 
 		return $items;
-	}
-
-
-
-	/**
-	 * @internal
-	 *
-	 * @param \Nette\Forms\Controls\BaseControl $control
-	 *
-	 * @return bool
-	 */
-	public function isEmail(Controls\BaseControl $control)
-	{
-		return $control->controlPrototype->type === 'email';
 	}
 
 }
