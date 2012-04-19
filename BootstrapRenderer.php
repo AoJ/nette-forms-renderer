@@ -129,9 +129,6 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		}
 
 		$this->template->form = $this->form;
-		$this->template->formErrors = $this->findErrors();
-		$this->template->formGroups = $this->findGroups();
-		$this->template->formSubmitters = $this->findSubmitters();
 		$this->template->renderer = $this;
 		$this->template->render();
 	}
@@ -141,7 +138,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	/**
 	 * @return array
 	 */
-	private function findErrors()
+	public function findErrors()
 	{
 		if (!$formErrors = $this->form->getErrors()) {
 			return array();
@@ -172,7 +169,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 * @throws \Nette\InvalidStateException
 	 * @return object[]
 	 */
-	private function findGroups()
+	public function findGroups()
 	{
 		$formGroups = $visitedGroups = array();
 		foreach ($this->priorGroups as $i => $group) {
@@ -201,9 +198,19 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 
 
 	/**
+	 * @return array
+	 */
+	public function findFormControls()
+	{
+		return $this->filterGroupControls($this->form->getControls());
+	}
+
+
+
+	/**
 	 * @return Nette\Forms\ISubmitterControl[]
 	 */
-	private function findSubmitters()
+	public function findSubmitters()
 	{
 		$formSubmitters = array();
 		foreach ($this->form->getComponents(TRUE, 'Nette\Forms\ISubmitterControl') as $control) {
@@ -243,23 +250,39 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 			}
 		}
 
-		$groupControls = array();
-		foreach ($group->getControls() as $control) {
+		// fake group
+		return (object)array(
+			'template' => $group->getOption('template'),
+			'controls' => $this->filterGroupControls($group->getControls()),
+			'label' => $groupLabel,
+			'description' => $groupDescription,
+		);
+	}
+
+
+
+	/**
+	 * @internal
+	 * @param \Iterator $groupControls
+	 * @return array
+	 */
+	public function filterGroupControls(\Iterator $groupControls)
+	{
+		$controls = array();
+		foreach ($groupControls as $control) {
 			/** @var \Nette\Forms\Controls\BaseControl $control */
 			if (!$control->getOption('rendered') && !$control instanceof Controls\HiddenField) {
 				continue;
 			}
 
-			$groupControls[] = $control;
+			if ($control instanceof \Nette\Forms\ISubmitterControl && !$control->getOption('inline')) {
+				continue;
+			}
+
+			$controls[] = $control;
 		}
 
-		// fake group
-		return (object)array(
-			'template' => $group->getOption('template'),
-			'controls' => $groupControls,
-			'label' => $groupLabel,
-			'description' => $groupDescription,
-		);
+		return $controls;
 	}
 
 
