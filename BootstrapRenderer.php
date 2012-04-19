@@ -262,11 +262,10 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 
 
 	/**
-	 * @internal
-	 * @param \Iterator $groupControls
+	 * @param array|\Traversable $groupControls
 	 * @return array
 	 */
-	public function filterGroupControls(\Iterator $groupControls)
+	private function filterGroupControls($groupControls)
 	{
 		$controls = array();
 		foreach ($groupControls as $control) {
