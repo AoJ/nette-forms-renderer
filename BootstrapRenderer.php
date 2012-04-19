@@ -151,6 +151,10 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 			return array();
 		}
 
+		if (!$this->errorsAtInputs) {
+			return $formErrors;
+		}
+
 		foreach ($this->form->getControls() as $control) {
 			/** @var \Nette\Forms\Controls\BaseControl $control */
 			if (!$control->hasErrors()) {
