@@ -12,9 +12,7 @@
 
     {var $controls = $group->controls}
     {if isset($group->template) && $group->template}
-        {include "$group->template",
-            group => $group, controls => $controls,
-            form => $form, _form => $form}
+        {include "$group->template", group => $group, controls => $controls, form => $form, _form => $form}
 
     {else}
         {block #controls}

@@ -271,7 +271,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		$controls = array();
 		foreach ($groupControls as $control) {
 			/** @var \Nette\Forms\Controls\BaseControl $control */
-			if (!$control->getOption('rendered') && !$control instanceof Controls\HiddenField) {
+			if ($control->getOption('rendered') || $control instanceof Controls\HiddenField) {
 				continue;
 			}
 
