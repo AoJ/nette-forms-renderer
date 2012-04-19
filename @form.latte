@@ -77,7 +77,7 @@
 {* submit buttons *}
 {foreach $renderer->findSubmitters() as $control}
     {first}<div class="form-actions">{/first}
-    {input $renderer->getControlName($control), class => 'btn'}
+    {input $renderer->getControlName($control)}
     {last}</div>{/last}
 {/foreach}
 

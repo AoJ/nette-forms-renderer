@@ -219,6 +219,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 				continue;
 			}
 
+			$control->getControlPrototype()->addClass('btn');
 			$formSubmitters[] = $control;
 		}
 
