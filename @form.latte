@@ -21,7 +21,7 @@
         {foreach $controls as $control}
         {if $renderer->isSubmitButton($control)}
             {input $renderer->getControlName($control)}
-            {if !$renderer->isSubmitButton($iterator->nextValue)}</div>{/if}
+            {if !$renderer->isSubmitButton($iterator->nextValue)}{!="</div>"}{/if}
         {/if}
 
         <div id="{$control->htmlId}-pair" n:class="$control->getOption('required')? required, control-group, $control->errors? error">
@@ -72,7 +72,7 @@
             {/if}
         </div>
 
-        {if $renderer->isSubmitButton($iterator->nextValue)}<div class="form-actions">{/if}
+        {if $renderer->isSubmitButton($iterator->nextValue)}{!='<div class="form-actions">'}{/if}
         {/foreach}
         {/block}
 
