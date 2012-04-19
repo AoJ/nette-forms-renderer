@@ -5,7 +5,11 @@
  * @copyright Animal Group
  */
 
+use Nette;
 use Nette\Forms\Controls;
+use Nette\Templating\FileTemplate;
+
+
 
 /**
  * The base template renderer for forms.
@@ -24,45 +28,57 @@ use Nette\Forms\Controls;
  * ok $field->setOption('prepend-button', 'buttonid');
  * ok $field->setOption('append-button', 'buttonid');
  * ok $field->setOption('placeholder', 'this is some placeholder text');
+ * ok $field->setOption('template', '/resolvable/path/to/template');
  *
  * @author Pavel Ptacek
- * @version pre-alpha
+ * @author Filip Procházka
  */
-class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRenderer {
+class TemplateFormRenderer extends Nette\Object implements Nette\Forms\IFormRenderer 
+{
 
     /** @var string directory where all the templates resides */
     private $directory;
 
     /** @var bool true, if you want to display the field errors also as form errors */
-    private $showFieldErorrsGlobally = false;
+    public $showFieldErorrsGlobally = FALSE;
 
     /** @var array buttonstack in order to render buttons after a first field */
     private $buttonStack = array();
 
-    /**
-     * @param string $dir full path to directory, where all the template files resides.
-     */
-    public function __construct($dir = null) {
-        if($dir === null) {
-            $dir = __DIR__ . '/bootstrap';
-        }
-        if(!is_dir($dir)) {
-            throw new \Nette\InvalidArgumentException('Directory "' . $dir . '" does not exists.');
-        }
+    /** @var \Nette\Forms\Form */
+    private $form;
 
-        // Save
-        $this->directory = $dir;
+    /** @var \Nette\Templating\FileTemplate */
+    private $template;
+
+
+    private function init()
+    {
+            '.required' => 'required',
+            '.text' => 'text',
+            '.password' => 'text',
+            '.file' => 'text',
+            '.submit' => 'button',
+            '.image' => 'imagebutton',
+            '.button' => 'button',
+
+        // TODO: only for back compatiblity - remove?
+        $wrapper = & $this->wrappers['control'];
+        foreach ($this->form->getControls() as $control) {
+            $control->setOption('rendered', FALSE);
+
+            if ($control->isRequired() && isset($wrapper['.required'])) {
+                $control->getLabelPrototype()->class('required', TRUE);
+            }
+
+            $el = $control->getControlPrototype();
+            if ($el->getName() === 'input' && isset($wrapper['.' . $el->type])) {
+                $el->class($wrapper['.' . $el->type], TRUE);
+            }
+        }
     }
 
-    /**
-     * true, if you want to display the field errors also as form errors
-     * @param bool $show
-     * @return self
-     */
-    public function setShowFieldErrorsGlobally($show = true) {
-        $this->showFieldErorrsGlobally = $show;
-        return $this;
-    }
+
 
     /**
      * Render the templates
@@ -70,10 +86,16 @@ class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRen
      * @param Nette\Forms\Form $form
      * @return void
      */
-    public function render(Nette\Forms\Form $form) {
+    public function render(Nette\Forms\Form $form) 
+    {
+        if ($this->form !== $form) {
+            $this->form = $form;
+            $this->init();
+        }
+
         $translator = $form->getTranslator();
         foreach($form->getControls() as $control) {
-            $control->setOption('rendered', false);
+            $control->setOption('rendered', FALSE);
         }
 
         /**
@@ -238,13 +260,12 @@ class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRen
      * @param string $template
      * @return
      */
-    protected function createTemplate($template, Nette\Forms\Form $form) {
-        $template = new \Nette\Templating\FileTemplate($template);
+    protected function getTemplate() 
+    {
+        $template = new FileTemplate(__DIR__ . '/@form.latte');
         $template->registerFilter(new \Nette\Latte\Engine());
-        if($form->getTranslator()) {
-            $template->setTranslator($form->getTranslator());
-        }
         $template->form = $form;
         return $template;
     }
+
 }
