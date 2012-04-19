@@ -87,12 +87,50 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
     {
         if ($this->form !== $form) {
             $this->form = $form;
-            $this->init();
+
+            // translators
+            if ($translator = $this->form->getTranslator()) {
+                $this->template->setTranslator($translator);
+            }
+
+            // controls placeholders & classes
+            foreach ($this->form->getControls() as $control) {
+                $control->setOption('rendered', FALSE);
+
+                if ($control->isRequired()) {
+                    $control->getLabelPrototype()
+                        ->addClass('required');
+                }
+
+                $el = $control->getControlPrototype();
+                if ($el->getName() === 'input') {
+                    $el->class(strtr($el->type, array(
+                            'password' => 'text',
+                            'file' => 'text',
+                            'submit' => 'button',
+                            'image' => 'imagebutton',
+                        )), TRUE);
+                }
+
+                if ($placeholder = $control->getOption('placeholder')) {
+                    if (!$placeholder instanceof Html && $translator) {
+                        $placeholder = $translator->translate($placeholder);
+                    }
+                    $el->placeholder($placeholder);
+                }
+            }
+
+            $formEl = $form->getElementPrototype();
+            if (stripos('form-', $formEl->class) === FALSE) {
+                $formEl->addClass('form-horizontal');
+            }
         }
 
+        $this->template->form = $this->form;
         $this->template->formErrors = $this->findErrors();
         $this->template->formGroups = $this->findGroups();
         $this->template->formSubmitters = $this->findSubmitters();
+        $this->template->renderer = $this;
         $this->template->render();
     }
 
@@ -178,47 +216,6 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 
 
     /**
-     */
-    private function init()
-    {
-        $template = $this->template;
-        $template->form = $this->form;
-        $template->renderer = $this;
-   
-        // translators
-        if ($translator = $this->form->getTranslator()) {
-            $template->setTranslator($translator);
-        }
-
-        // type classes
-        foreach ($this->form->getControls() as $control) {
-            $control->setOption('rendered', FALSE);
-
-            if ($control->isRequired()) {
-                $control->getLabelPrototype()
-                    ->addClass('required');
-            }
-
-            $el = $control->getControlPrototype();
-            if ($el->getName() === 'input') {
-                $el->class(strtr($el->type, array(
-                        'password' => 'text',
-                        'file' => 'text',
-                        'submit' => 'button',
-                        'image' => 'imagebutton',
-                    )), TRUE);
-            }
-        }
-
-        $formEl = $form->getElementPrototype();
-        if (stripos('form-', $formEl->class) === FALSE) {
-            $formEl->addClass('form-horizontal');
-        }
-    }
-
-
-
-    /**
      * @return object
      */
     protected function buildGroup(Nette\Forms\ControlGroup $group)
@@ -242,7 +239,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 
         $groupControls = array();
         foreach ($group->getControls() as $control) {
-            if (!$this->isRenderableInBody($control)) {
+            if (!$control->getOption('rendered') && !$control instanceof Controls\HiddenField) {
                 continue;
             }
 
@@ -256,19 +253,6 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
             'label' => $groupLabel,
             'description' => $groupDescription,
         );
-    }
-
-
-
-    /**
-     * @internal
-     * @return bool
-     */
-    public function isRenderableInBody(Nette\Forms\IControl $control)
-    {
-        return !$control->getOption('rendered')
-            && !$control instanceof Nette\Forms\ISubmitterControl 
-            && !$control instanceof Controls\HiddenField;
     }
 
 
