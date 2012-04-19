@@ -43,7 +43,7 @@
             {elseif $renderer->isRadioList($control)}
                 {label $name, class => 'control-label' /}
                 <div class="controls">
-                    {foreach $control->items as $item}
+                    {foreach $renderer->getRadioListItems($control) as $item}
                         {$item->label->startTag()}
                             {$item->input}{$item->caption}
                         {$item->label->endTag()}
