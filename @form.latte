@@ -10,8 +10,7 @@
     <legend n:if="$group->label">{$group->label}</legend>
     <p n:if="$group->description">{$group->description}</p>
 
-    {var $controls = $group->controls,
-         $submitters = $group->submitters}
+    {var $controls = $group->controls}
     {if isset($group->template) && $group->template}
         {include "$group->template", group => $group,
             controls => $controls, submitters => $submitters,
@@ -19,9 +18,14 @@
 
     {else}
         {block #controls}
+        {foreach $controls as $control}
+        {if $renderer->isSubmitButton($iterator->nextValue)}<div class="form-actions">{/if}
+        {if $renderer->isSubmitButton($control)}
+            {input $renderer->getControlName($control)}
+            {if !$renderer->isSubmitButton($iterator->nextValue)}</div>{/if}
+        {/if}
 
-        {* controls *}
-        <div n:foreach="$controls as $control" id="{$control->htmlId}-pair" n:class="$control->getOption('required')? required, control-group, $control->errors? error">
+        <div id="{$control->htmlId}-pair" n:class="$control->getOption('required')? required, control-group, $control->errors? error">
             {var
                 $name = $renderer->getControlName($control),
                 $description = $renderer->getControlDescription($control),
@@ -68,14 +72,6 @@
 
             {/if}
         </div>
-
-
-        {* submit buttons *}
-        {foreach $submitters as $control}
-            {first}
-            <div class="form-actions">{/first}
-            {input $renderer->getControlName($control)}
-            {last}</div>{/last}
         {/foreach}
         {/block}
 
@@ -83,7 +79,6 @@
 </fieldset>
 
 {* controls without group *}
-{include #controls, controls => $renderer->findFormControls(),
-                    submitters => $renderer->findFormSubmitters()}
+{include #controls, controls => $renderer->findFormControls()}
 
 {/form}

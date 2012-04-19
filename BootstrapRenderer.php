@@ -229,20 +229,6 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	{
 		$controls = iterator_to_array($this->form->getControls());
 		return array_filter($controls, function (Controls\BaseControl $control) {
-			return !$control->getOption('rendered')
-				&& !$control instanceof Nette\Forms\ISubmitterControl;
-		});
-	}
-
-
-
-	/**
-	 * @return Nette\Forms\ISubmitterControl[]
-	 */
-	public function findFormSubmitters()
-	{
-		$submitters = iterator_to_array($this->form->getComponents(TRUE, 'Nette\Forms\ISubmitterControl'));
-		return array_filter($submitters, function (Controls\BaseControl $control) {
 			return !$control->getOption('rendered');
 		});
 	}
@@ -280,14 +266,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 			'template' => $group->getOption('template'),
 			'controls' => array_filter($controls, function (Controls\BaseControl $control) {
 					return !$control->getOption('rendered')
-						&& !$control instanceof Controls\HiddenField
-						&& (!$control instanceof Nette\Forms\ISubmitterControl
-							|| $control->getOption('inline') === TRUE);
-				}),
-			'submitters' => array_filter($controls, function (Controls\BaseControl $control) {
-					return !$control->getOption('rendered')
-						&& $control instanceof Nette\Forms\ISubmitterControl
-						&& $control->getOption('inline') !== TRUE;
+						&& !$control instanceof Controls\HiddenField;
 				}),
 			'label' => $groupLabel,
 			'description' => $groupDescription,
@@ -385,6 +364,20 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	public static function isButton(Nette\Forms\IControl $control)
 	{
 		return $control instanceof Controls\Button;
+	}
+
+
+
+	/**
+	 * @internal
+	 *
+	 * @param \Nette\Forms\IControl $control
+	 *
+	 * @return bool
+	 */
+	public static function isSubmitButton(Nette\Forms\IControl $control)
+	{
+		return $control instanceof Nette\Forms\ISubmitterControl;
 	}
 
 
