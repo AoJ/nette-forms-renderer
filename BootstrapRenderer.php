@@ -143,7 +143,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 */
 	private function findErrors()
 	{
-		if (!$formErrors = $this->form->errors) {
+		if (!$formErrors = $this->form->getErrors()) {
 			return array();
 		}
 
@@ -312,7 +312,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	 */
 	public function getControlError(Controls\BaseControl $control)
 	{
-		if (!$errors = $control->errors || !$this->errorsAtInputs) {
+		if (!$errors = $control->getErrors() || !$this->errorsAtInputs) {
 			return Html::el();
 		}
 		$error = reset($errors);
