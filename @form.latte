@@ -19,7 +19,6 @@
     {else}
         {block #controls}
         {foreach $controls as $control}
-        {if $renderer->isSubmitButton($iterator->nextValue)}<div class="form-actions">{/if}
         {if $renderer->isSubmitButton($control)}
             {input $renderer->getControlName($control)}
             {if !$renderer->isSubmitButton($iterator->nextValue)}</div>{/if}
@@ -72,6 +71,8 @@
 
             {/if}
         </div>
+
+        {if $renderer->isSubmitButton($iterator->nextValue)}<div class="form-actions">{/if}
         {/foreach}
         {/block}
 
