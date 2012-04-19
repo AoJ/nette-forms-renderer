@@ -215,7 +215,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 		$formSubmitters = array();
 		foreach ($this->form->getComponents(TRUE, 'Nette\Forms\ISubmitterControl') as $control) {
 			/** @var \Nette\Forms\Controls\BaseControl $control */
-			if ($control->getOption('rendered') && !$control->getOption('inline')) {
+			if ($control->getOption('rendered') || $control->getOption('inline')) {
 				continue;
 			}
 
