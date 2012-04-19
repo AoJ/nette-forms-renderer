@@ -55,7 +55,7 @@ class BootstrapRenderer extends Nette\Object implements Nette\Forms\IFormRendere
 	private $form;
 
 	/**
-	 * @var \Nette\Templating\Template
+	 * @var \Nette\Templating\Template|\stdClass
 	 */
 	private $template;
 
